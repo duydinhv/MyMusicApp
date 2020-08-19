@@ -7,26 +7,68 @@
 //
 
 import UIKit
-
+import AVFoundation
+import MediaPlayer
 
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
   
     @IBOutlet weak var table: UITableView!
     var songs = [Song]()
+    lazy var songName = ""
+    lazy var album = ""
+    lazy var artist = ""
+    lazy var image = NSData()
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
-        configureSongs()
+        getSong()
         table.dataSource = self
         table.delegate = self
     }
 
-    func configureSongs() {
-        songs.append(Song(name: "Bac Phan", albumName: "Jack's song", artistName: "Jack", imageName: "cover 1", trackName: "Bac Phan"))
-        songs.append(Song(name: "Mot Buoc Yeu Van Dam Dau", albumName: "something", artistName: "Mr.Siro", imageName: "cover 2", trackName: "Mot Buoc Yeu Van Dam Dau"))
-        songs.append(Song(name: "Mot Dem Say (X)", albumName: "something", artistName: "Thinh Suy", imageName: "cover 3", trackName: "Mot Dem Say (X)"))
+    func getSong() {
+        let fileURL = URL(fileURLWithPath: Bundle.main.resourcePath!)
+        do {
+            let filePath = try FileManager.default.contentsOfDirectory(at: fileURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
+            for file in filePath {
+                var fileString = file.absoluteString
+                if fileString.contains(".mp3") {
+                    let findString = fileString.components(separatedBy: "/")
+                    fileString = findString[findString.count - 1]
+                    fileString = fileString.replacingOccurrences(of: "%20", with: " ")
+                    fileString = fileString.replacingOccurrences(of: ".mp3", with: "")
+                    getDataSong(fileString)
+                    songs.append(Song(name: songName, albumName: album, artistName: artist, imageName: image, trackName: fileString))
+                }
+            }
+        } catch {
+            print(error)
+        }
     }
+    
+    func getDataSong(_ fileString: String) {
+        let filePath = Bundle.main.path(forResource: fileString, ofType: "mp3")
+        let fileUrl = URL(fileURLWithPath: filePath!)
+        let playerItem = AVPlayerItem(url: fileUrl)
+        let metadataList = playerItem.asset.metadata
+        for metadata in metadataList {
+            guard let key = metadata.commonKey?.rawValue, let value = metadata.value else { continue }
+            switch key {
+                case "title" :
+                    songName = value as! String
+                case "artist":
+                    artist = value as! String
+                case "albumName" :
+                    album = value as! String
+                case "artwork" :
+                    image = value as! NSData
+                default:
+                    continue
+            }
+        }
+    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return songs.count
     }
@@ -37,7 +79,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         cell.textLabel?.text = song.name
         cell.detailTextLabel?.text = song.albumName
         cell.accessoryType = .disclosureIndicator
-        cell.imageView?.image = UIImage(named: song.imageName)
+        cell.imageView?.image = UIImage(data: song.imageName as Data)
         
         cell.textLabel?.font = UIFont(name: "Helvetica-Bold", size: 18)
         cell.detailTextLabel?.font = UIFont(name: "Helvetica", size: 17)
@@ -69,19 +111,6 @@ struct Song {
     var name: String
     var albumName: String
     var artistName: String
-    var imageName: String
+    var imageName: NSData
     var trackName: String
-    
-//    func getSong() {
-//        let folderURL = URL(fileURLWithPath: Bundle.main.resourcePath!)
-//        do {
-//            let songPath = try FileManager.default.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
-//            for songItem in songPath {
-//                var song = songItem.absoluteString
-//                if song.contains(".mp3") {
-//                    let
-//                }
-//            }
-//        }
-//    }
 }

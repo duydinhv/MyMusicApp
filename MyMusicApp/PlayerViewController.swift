@@ -80,7 +80,7 @@ class PlayerViewController: UIViewController {
                                       y: 10,
                                       width: holder.frame.size.width - 20,
                                       height: holder.frame.size.width - 20)
-        albumImageView.image = UIImage(named: song.imageName)
+        albumImageView.image = UIImage(data: song.imageName as Data)
         holder.addSubview(albumImageView)
         
         // labels
